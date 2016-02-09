@@ -1,0 +1,30 @@
+# This file is read by SimG4Core/CustomPhysics/src/CustomParticleFactory.cc  
+# The strings "decay", "pdg code", and "block", with correct capitalization, are used 
+# to control the data input, so do not use these in any comments.  
+# 
+# 
+# Get values for chargino and neutralino masses from:  
+# ../data/AMSB_chargino_500GeV_Isajet780.slha
+BLOCK MASS   
+#  PDG code   mass   particle 
+# bfrancis
+   1000022   2.50000000E+02   # ~neutralino(1)
+   1000024   2.49800000E+02   # ~chargino(1)+
+  -1000024   2.49800000E+02   # ~chargino(1)-
+Block 
+
+# Set neutralino lifetime 
+# and decay:  neutralino -> chargino + pion 
+# neutralino ctau  = 100 cm 
+# neutralino  tau  = 3.33564604793 ns 
+# neutralino width = 1.97326691904e-16 GeV 
+#       PDG       Width               #
+DECAY  1000022  1.97326691904e-16 # neutralino decay  
+#   BR       NDA      ID1      ID2  
+   0.5000    2     1000024   -211
+   0.5000    2    -1000024    211
+DECAY   1000024  0.0000000000e+00 # chargino decay
+DECAY  -1000024  0.0000000000e+00 # -chargino decay
+Block 
+
+EOF 
