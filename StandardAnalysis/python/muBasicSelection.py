@@ -46,18 +46,6 @@ muMinimal = cms.PSet(
             cutString = cms.string("innerTrack.hitPattern_.trackerLayersWithMeasurement >= 0"),
             numberRequired = cms.string(">= 1")
         ),
-
-        
-        cms.PSet(
-            inputCollection = cms.vstring("muons"),
-            cutString = cms.string("\
-        globalTrack.hitPattern_.numberOfValidMuonHits > 0 & \
-        globalTrack.normalizedChi2 < 10 & \
-        numberOfMatchedStations > 1 & \
-        innerTrack.hitPattern_.numberOfValidPixelHits > 0 & \
-        innerTrack.hitPattern_.trackerLayersWithMeasurement > 5"),
-        numberRequired = cms.string(">= 1"),
-        alias = cms.string("muon tight displaced ID")
         
     )
 )

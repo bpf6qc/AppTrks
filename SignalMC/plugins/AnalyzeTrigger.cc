@@ -1,22 +1,3 @@
-// -*- C++ -*-
-//
-// Package:    Demo/MyTrigAnalyzer
-// Class:      MyTrigAnalyzer
-// 
-/**\class MyTrigAnalyzer MyTrigAnalyzer.cc Demo/MyTrigAnalyzer/plugins/MyTrigAnalyzer.cc
-
- Description: [one line class summary]
-
- Implementation:
-     [Notes on implementation]
-*/
-//
-// Original Author:  Jessica Brinson
-//         Created:  Tue, 19 Aug 2014 13:15:39 GMT
-//
-//
-
-
 // system include files
 #include <memory>
 
@@ -55,10 +36,10 @@
 // class declaration
 //
 
-class MyTrigAnalyzer : public edm::EDAnalyzer {
+class AnalyzeTrigger : public edm::EDAnalyzer {
    public:
-      explicit MyTrigAnalyzer(const edm::ParameterSet&);
-      ~MyTrigAnalyzer();
+      explicit AnalyzeTrigger(const edm::ParameterSet&);
+      ~AnalyzeTrigger();
 
       static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
@@ -116,7 +97,7 @@ class MyTrigAnalyzer : public edm::EDAnalyzer {
 //
 // constructors and destructor
 //
-MyTrigAnalyzer::MyTrigAnalyzer(const edm::ParameterSet& iConfig)
+AnalyzeTrigger::AnalyzeTrigger(const edm::ParameterSet& iConfig)
  :
   trackTags_(iConfig.getUntrackedParameter<edm::InputTag>("tracks")),
   hltTrackTags_(iConfig.getUntrackedParameter<edm::InputTag>("hltTracks")),
@@ -156,7 +137,7 @@ hltTrackPt = fs->make<TH1D>("hltPt" , "pT; HLT track pT [GeV]" , 100 , 0 , 500 )
 }
 
 
-MyTrigAnalyzer::~MyTrigAnalyzer()
+AnalyzeTrigger::~AnalyzeTrigger()
 {
  
    // do anything here that needs to be done at desctruction time
@@ -171,7 +152,7 @@ MyTrigAnalyzer::~MyTrigAnalyzer()
 
 // ------------ method called for each event  ------------
 void
-MyTrigAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+AnalyzeTrigger::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
    using namespace edm;
 
@@ -283,13 +264,13 @@ MyTrigAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 // ------------ method called once each job just before starting event loop  ------------
 void 
-MyTrigAnalyzer::beginJob()
+AnalyzeTrigger::beginJob()
 {
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
 void 
-MyTrigAnalyzer::endJob() 
+AnalyzeTrigger::endJob() 
 {
   //  l1metEff = (TH1D*) l1metPt->Clone("l1metEff");
   //  l1metEff->Divide(metPt);
@@ -300,7 +281,7 @@ MyTrigAnalyzer::endJob()
 // ------------ method called when starting to processes a run  ------------
 /*
 void 
-MyTrigAnalyzer::beginRun(edm::Run const&, edm::EventSetup const&)
+AnalyzeTrigger::beginRun(edm::Run const&, edm::EventSetup const&)
 {
 }
 */
@@ -308,7 +289,7 @@ MyTrigAnalyzer::beginRun(edm::Run const&, edm::EventSetup const&)
 // ------------ method called when ending the processing of a run  ------------
 /*
 void 
-MyTrigAnalyzer::endRun(edm::Run const&, edm::EventSetup const&)
+AnalyzeTrigger::endRun(edm::Run const&, edm::EventSetup const&)
 {
 }
 */
@@ -316,7 +297,7 @@ MyTrigAnalyzer::endRun(edm::Run const&, edm::EventSetup const&)
 // ------------ method called when starting to processes a luminosity block  ------------
 /*
 void 
-MyTrigAnalyzer::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
+AnalyzeTrigger::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
 {
 }
 */
@@ -324,14 +305,14 @@ MyTrigAnalyzer::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetu
 // ------------ method called when ending the processing of a luminosity block  ------------
 /*
 void 
-MyTrigAnalyzer::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
+AnalyzeTrigger::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
 {
 }
 */
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
 void
-MyTrigAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+AnalyzeTrigger::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   //The following says we do not know what parameters are allowed so do no validation
   // Please change this to state exactly what you do use, even if it is no parameters
   edm::ParameterSetDescription desc;
@@ -346,4 +327,4 @@ MyTrigAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 }
 
 //define this as a plug-in
-DEFINE_FWK_MODULE(MyTrigAnalyzer);
+DEFINE_FWK_MODULE(AnalyzeTrigger);

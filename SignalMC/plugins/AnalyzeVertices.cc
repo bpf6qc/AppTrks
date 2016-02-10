@@ -1,23 +1,3 @@
-// -*- C++ -*-
-//
-// Package:    DemoAnalyzer
-// Class:      DemoAnalyzer
-// 
-/**\class DemoAnalyzer DemoAnalyzer.cc Demo/DemoAnalyzer/src/DemoAnalyzer.cc
-
- Description: [one line class summary]
-
- Implementation:
-     [Notes on implementation]
-*/
-//
-// Original Author:  Howard Wells Wulsin,42 2-034,+41227662377,
-//         Created:  Thu Mar  6 13:08:46 CET 2014
-// $Id$
-//
-//
-
-
 // system include files
 #include <memory>
 
@@ -51,10 +31,10 @@
 using namespace std;  
 
 
-class VertexAnalyzer : public edm::EDAnalyzer {
+class AnalyzeVertices : public edm::EDAnalyzer {
    public:
-      explicit VertexAnalyzer(const edm::ParameterSet&);
-      ~VertexAnalyzer();
+      explicit AnalyzeVertices(const edm::ParameterSet&);
+      ~AnalyzeVertices();
 
       static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
@@ -127,7 +107,7 @@ class VertexAnalyzer : public edm::EDAnalyzer {
 //
 // constructors and destructor
 //
-VertexAnalyzer::VertexAnalyzer(const edm::ParameterSet& iConfig)
+AnalyzeVertices::AnalyzeVertices(const edm::ParameterSet& iConfig)
 
 {
    //now do what ever initialization is needed
@@ -172,7 +152,7 @@ VertexAnalyzer::VertexAnalyzer(const edm::ParameterSet& iConfig)
 }
 
 
-VertexAnalyzer::~VertexAnalyzer()
+AnalyzeVertices::~AnalyzeVertices()
 {
  
    // do anything here that needs to be done at desctruction time
@@ -189,7 +169,7 @@ VertexAnalyzer::~VertexAnalyzer()
 
 // ------------ method called for each event  ------------
 void
-VertexAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+AnalyzeVertices::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
    using namespace edm;
 
@@ -454,43 +434,43 @@ VertexAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 // ------------ method called once each job just before starting event loop  ------------
 void 
-VertexAnalyzer::beginJob()
+AnalyzeVertices::beginJob()
 {
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
 void 
-VertexAnalyzer::endJob() 
+AnalyzeVertices::endJob() 
 {
 }
 
 // ------------ method called when starting to processes a run  ------------
 void 
-VertexAnalyzer::beginRun(edm::Run const&, edm::EventSetup const&)
+AnalyzeVertices::beginRun(edm::Run const&, edm::EventSetup const&)
 {
 }
 
 // ------------ method called when ending the processing of a run  ------------
 void 
-VertexAnalyzer::endRun(edm::Run const&, edm::EventSetup const&)
+AnalyzeVertices::endRun(edm::Run const&, edm::EventSetup const&)
 {
 }
 
 // ------------ method called when starting to processes a luminosity block  ------------
 void 
-VertexAnalyzer::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
+AnalyzeVertices::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
 {
 }
 
 // ------------ method called when ending the processing of a luminosity block  ------------
 void 
-VertexAnalyzer::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
+AnalyzeVertices::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
 {
 }
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
 void
-VertexAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+AnalyzeVertices::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   //The following says we do not know what parameters are allowed so do no validation
   // Please change this to state exactly what you do use, even if it is no parameters
   edm::ParameterSetDescription desc;
@@ -499,4 +479,4 @@ VertexAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 }
 
 //define this as a plug-in
-DEFINE_FWK_MODULE(VertexAnalyzer);
+DEFINE_FWK_MODULE(AnalyzeVertices);

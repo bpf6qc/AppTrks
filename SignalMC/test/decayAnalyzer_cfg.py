@@ -18,7 +18,7 @@ process.source = cms.Source ("PoolSource",
 
 process.source.duplicateCheckMode = cms.untracked.string ('noDuplicateCheck')
 
-process.demo = cms.EDAnalyzer ('DecayAnalyzer',
+process.demo = cms.EDAnalyzer ('AnalyzeDecays',
     genParticleTag = cms.InputTag ("genParticlePlusGeant", ""),
     isParticleGun = cms.untracked.bool (False),
     MaxEta = cms.untracked.double (1.0e12),
@@ -27,7 +27,7 @@ process.demo = cms.EDAnalyzer ('DecayAnalyzer',
 
 
 process.TFileService = cms.Service ("TFileService",
-    fileName = cms.string (outputFile)
+    fileName = cms.string ('file:output.root')
 )
 
 process.p = cms.Path (process.demo)

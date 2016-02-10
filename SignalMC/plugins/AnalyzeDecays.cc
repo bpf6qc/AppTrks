@@ -26,10 +26,10 @@
 
 using namespace std;
 
-class DecayAnalyzer : public edm::EDAnalyzer {
+class AnalyzeDecays : public edm::EDAnalyzer {
    public:
-      explicit DecayAnalyzer(const edm::ParameterSet&);
-      ~DecayAnalyzer();
+      explicit AnalyzeDecays(const edm::ParameterSet&);
+      ~AnalyzeDecays();
 
       static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
@@ -115,7 +115,7 @@ class DecayAnalyzer : public edm::EDAnalyzer {
 //
 // constructors and destructor
 //
-DecayAnalyzer::DecayAnalyzer(const edm::ParameterSet& iConfig) {
+AnalyzeDecays::AnalyzeDecays(const edm::ParameterSet& iConfig) {
 
   genParticleTag_ = iConfig.getParameter<edm::InputTag>("genParticleTag");
   isParticleGun_  = iConfig.getUntrackedParameter<bool>("isParticleGun", false);
@@ -169,7 +169,7 @@ DecayAnalyzer::DecayAnalyzer(const edm::ParameterSet& iConfig) {
 }
 
 
-DecayAnalyzer::~DecayAnalyzer()
+AnalyzeDecays::~AnalyzeDecays()
 {
 
    // do anything here that needs to be done at desctruction time
@@ -186,7 +186,7 @@ DecayAnalyzer::~DecayAnalyzer()
 
 // ------------ method called for each event  ------------
 void
-DecayAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+AnalyzeDecays::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
    using namespace edm;
 
@@ -479,43 +479,43 @@ DecayAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 // ------------ method called once each job just before starting event loop  ------------
 void
-DecayAnalyzer::beginJob()
+AnalyzeDecays::beginJob()
 {
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
 void
-DecayAnalyzer::endJob()
+AnalyzeDecays::endJob()
 {
 }
 
 // ------------ method called when starting to processes a run  ------------
 void
-DecayAnalyzer::beginRun(edm::Run const&, edm::EventSetup const&)
+AnalyzeDecays::beginRun(edm::Run const&, edm::EventSetup const&)
 {
 }
 
 // ------------ method called when ending the processing of a run  ------------
 void
-DecayAnalyzer::endRun(edm::Run const&, edm::EventSetup const&)
+AnalyzeDecays::endRun(edm::Run const&, edm::EventSetup const&)
 {
 }
 
 // ------------ method called when starting to processes a luminosity block  ------------
 void
-DecayAnalyzer::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
+AnalyzeDecays::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
 {
 }
 
 // ------------ method called when ending the processing of a luminosity block  ------------
 void
-DecayAnalyzer::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
+AnalyzeDecays::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
 {
 }
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
 void
-DecayAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+AnalyzeDecays::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   //The following says we do not know what parameters are allowed so do no validation
   // Please change this to state exactly what you do use, even if it is no parameters
   edm::ParameterSetDescription desc;
@@ -524,4 +524,4 @@ DecayAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 }
 
 //define this as a plug-in
-DEFINE_FWK_MODULE(DecayAnalyzer);
+DEFINE_FWK_MODULE(AnalyzeDecays);
