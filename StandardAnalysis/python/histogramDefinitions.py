@@ -4,27 +4,58 @@ import FWCore.ParameterSet.Config as cms
 ##### Set up the histograms to be plotted #####
 ###############################################
 
-mcHistograms = cms.PSet(
-    inputCollection = cms.vstring("mcparticles", "beamspots"),
+newMuonHistograms = cms.PSet(
+    inputCollection = cms.vstring("muons"),
     histograms = cms.VPSet(
+        # promptFinalState
         cms.PSet(
-            name = cms.string("charginoD0Beamspot"),
-            title = cms.string("Chargino d_{0} wrt Beamspot; d_{0} [cm]"),
-            binsX = cms.untracked.vdouble(1000, -20, 20),
-            inputVariables = cms.vstring("(-(mcparticle.vx - beamspot.x0)*muon.py + (mcparticle.vy - beamspot.y0)*mcparticle.px)/mcparticle.pt"),
+            binsX = cms.untracked.vdouble(100, 0, 100),
+            inputVariables = cms.vstring('abs(genMatchedParticle.promptFinalState.pdgId) - 1000000'),
+            name = cms.string('genMatchedPromptFinalStateID'),
+            title = cms.string(';PDG ID - 1e6')
         ),
         cms.PSet(
-            name = cms.string("charginoD0SigBeamspot"),
-            title = cms.string("Chargino d_{0}/#sigma(d_{0}) wrt Beamspot; d_{0}/#sigma(d_{0})"),
-            binsX = cms.untracked.vdouble(1000, -20, 20),
-            inputVariables = cms.vstring("((-(mcparticle.vx - beamspot.x0)*mcparticle.py + (mcparticle.vy - beamspot.y0)*mcparticle.px)/mcparticle.pt)/hypot(mcparticle.innerTrack.d0Error, hypot(beamspot.x0Error, beamspot.y0Error))"),
+            binsX = cms.untracked.vdouble(30, 0.0, 0.3),
+            inputVariables = cms.vstring('dRToGenMatchedParticle.promptFinalState'),
+            name = cms.string('dRToGenMatchedPromptFinalStateID'),
+            title = cms.string(';#DeltaR')
         ),
         cms.PSet(
-            name = cms.string("charginoAbsD0BeamspotVsAbsDz"),
-            title = cms.string("Chargino |d_{0}| wrt Beamspot vs. Chargino |d_{z}|; Chargino |d_{z}| [cm]; |Chargino d_{0}| [cm]"),
-            binsX = cms.untracked.vdouble(1000, 0, 20),
-            binsY = cms.untracked.vdouble(1000, 0, 20),
-            inputVariables = cms.vstring("abs((mcparticle.vz - beamspot.z0) - ((mcparticle.vx - beamspot.x0)*mcparticle.px + (mcparticle.vy - beamspot.y0)*mcparticle.py)/mcparticle.pt*(mcparticle.pz/mcparticle.pt))","abs((-(mcparticle.vx - beamspot.x0)*mcparticle.py + (mcparticle.vy - beamspot.y0)*mcparticle.px)/mcparticle.pt)"),
+            binsX = cms.untracked.vdouble(200, 0, 1000),
+            inputVariables = cms.vstring('genMatchedParticle.promptFinalState.pt'),
+            name = cms.string('genMatchedPromptFinalStatePt'),
+            title = cms.string(';genMatchedPromptFinalState Pt')
+        ),
+        # hardProcessFinalState
+        cms.PSet(
+            binsX = cms.untracked.vdouble(100, 0, 100),
+            inputVariables = cms.vstring('abs(genMatchedParticle.hardProcessFinalState.pdgId) - 1000000'),
+            name = cms.string('genMatchedHardProcessFinalStateID'),
+            title = cms.string(';PDG ID - 1e6')
+        ),
+        cms.PSet(
+            binsX = cms.untracked.vdouble(30, 0.0, 0.3),
+            inputVariables = cms.vstring('dRToGenMatchedParticle.hardProcessFinalState'),
+            name = cms.string('dRToGenMatchedHardProcessFinalStateID'),
+            title = cms.string(';#DeltaR')
+        ),
+        cms.PSet(
+            binsX = cms.untracked.vdouble(200, 0, 1000),
+            inputVariables = cms.vstring('genMatchedParticle.hardProcessFinalState.pt'),
+            name = cms.string('genMatchedHardProcessFinalStatePt'),
+            title = cms.string(';genMatchedHardProcessFinalState Pt')
+        ),
+        cms.PSet(
+            binsX = cms.untracked.vdouble(210, -10, 200),
+            inputVariables = cms.vstring('(pt - genMatchedParticle.promptFinalState.pt) / genMatchedParticle.promptFinalState.pt'),
+            name = cms.string('genMatchedPtDifference'),
+            title = cms.string(';(muon pt - genMatched pt) / genMatched pt')
+        ),
+        cms.PSet(
+            binsX = cms.untracked.vdouble(2000, -1000, 1000),
+            inputVariables = cms.vstring('pt - genMatchedParticle.promptFinalState.pt'),
+            name = cms.string('genMatchedPtDifference'),
+            title = cms.string(';muon pt - genMatched pt')
         ),
     )
 )

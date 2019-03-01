@@ -48,14 +48,19 @@ class ZPeakAnalyzer : public edm::EDAnalyzer
 
  private:
   edm::Handle<reco::TrackCollection> TrackCollection;
-  edm::Handle<reco::TrackCollection> SecondaryTrackCollection;
+  edm::Handle<reco::GenParticleCollection> GenParticlesCollection;
   edm::Handle<trigger::TriggerEvent> triggerSummary;
 
-  edm::InputTag recoTrack_;
-  edm::InputTag recoTrack2_;
+
+  edm::InputTag trackCollectionLabel_;
+  edm::InputTag genCollectionLabel_;
   edm::InputTag triggerResultsLabel_;
 
   edm::Handle<edm::TriggerResults> triggerResults;
 
-  TH1D * h_invmass;
+  TH1D * h_chargino_pt;
+  TH1D * h_chargino_eta;
+
+  TH1D * h_sa_pt;
+  TH1D * h_sa_eta;
 };

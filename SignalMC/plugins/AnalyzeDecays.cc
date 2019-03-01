@@ -13,6 +13,13 @@
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/Candidate/interface/Candidate.h"
 
+#include "DataFormats/TrackReco/interface/Track.h"
+#include "DataFormats/TrackReco/interface/TrackFwd.h"
+
+#include "DataFormats/Candidate/interface/Candidate.h"
+#include "DataFormats/Candidate/interface/CandMatchMap.h"
+#include "DataFormats/Common/interface/AssociationVector.h"
+
 #include "SimDataFormats/Track/interface/SimTrackContainer.h"
 #include "SimDataFormats/Vertex/interface/SimVertexContainer.h"
 
@@ -24,27 +31,28 @@
 
 #include <ext/algorithm>  // For sorting?
 
+using namespace edm;
 using namespace std;
+using namespace reco;
 
 class AnalyzeDecays : public edm::EDAnalyzer {
-   public:
-      explicit AnalyzeDecays(const edm::ParameterSet&);
-      ~AnalyzeDecays();
+public:
+  explicit AnalyzeDecays(const edm::ParameterSet&);
+  ~AnalyzeDecays();
 
-      static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
+  static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
+  
+private:
+  virtual void beginJob() ;
+  virtual void analyze(const edm::Event&, const edm::EventSetup&);
+  virtual void endJob() ;
 
+  virtual void beginRun(edm::Run const&, edm::EventSetup const&);
+  virtual void endRun(edm::Run const&, edm::EventSetup const&);
+  virtual void beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
+  virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
 
-   private:
-      virtual void beginJob() ;
-      virtual void analyze(const edm::Event&, const edm::EventSetup&);
-      virtual void endJob() ;
-
-      virtual void beginRun(edm::Run const&, edm::EventSetup const&);
-      virtual void endRun(edm::Run const&, edm::EventSetup const&);
-      virtual void beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
-      virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
-
-      // ----------member data ---------------------------
+  // ----------member data ---------------------------
 
   TH1D * h_neutralinoSumPt;
 
@@ -88,13 +96,18 @@ class AnalyzeDecays : public edm::EDAnalyzer {
   TH1D * h_GenEtaSel;
   TH1D * h_GenEtaFoundVtx;
 
-
+  TH1D * h_dPhi_decay;
+  TH1D * h_dR_decay;
+  
+  TH1D * h_reco_pt;
+  TH1D * h_reco_eta;
+  
   edm::InputTag genParticleTag_;
+  edm::InputTag recoParticleTag_;
 
   bool isParticleGun_;
   double MaxEta_;
   bool quiet_;
-
 
   struct LessById {
     bool operator()(const SimTrack &tk1, const SimTrack &tk2) const { return tk1.trackId() < tk2.trackId(); }
@@ -118,6 +131,7 @@ class AnalyzeDecays : public edm::EDAnalyzer {
 AnalyzeDecays::AnalyzeDecays(const edm::ParameterSet& iConfig) {
 
   genParticleTag_ = iConfig.getParameter<edm::InputTag>("genParticleTag");
+  recoParticleTag_ = iConfig.getParameter<edm::InputTag>("recoParticleTag");
   isParticleGun_  = iConfig.getUntrackedParameter<bool>("isParticleGun", false);
   MaxEta_         = iConfig.getUntrackedParameter<double>("MaxEta", 2.5);
   quiet_          = iConfig.getUntrackedParameter<bool>("quiet", false);
@@ -141,17 +155,17 @@ AnalyzeDecays::AnalyzeDecays(const edm::ParameterSet& iConfig) {
   h_GenEtaSel = fs->make<TH1D>("GenEtaSel" , ";#eta, selected #chi^{#pm}" , 100 , -7, 7);
   h_GenEtaFoundVtx = fs->make<TH1D>("GenEtaFoundVtx" ,    ";#eta, generated #chi^{#pm} with decay vertex" , 100 , -7, 7);
 
-  h_vxy = fs->make<TH1D>("vxy", "vxy", 100, 0, 5);
-  h_vx = fs->make<TH1D>("vx", "vx", 100, 0, 5);
-  h_vy = fs->make<TH1D>("vy", "vy", 100, 0, 5);
-  h_vz = fs->make<TH1D>("vz", "vz", 100, 0, 50);
-  h_vxyz = fs->make<TH2D>("vxyz", ";vz;vxy", 100, 0, 50, 100, 0, 5);
-  h_decayVxy = fs->make<TH1D>("decayVxy", "decayVxy", 100, 0, 1000);
-  h_decayVx = fs->make<TH1D>("decayVx", "decayVx", 100, 0, 1000);
-  h_decayVy = fs->make<TH1D>("decayVy", "decayVy", 100, 0, 1000);
-  h_decayVz = fs->make<TH1D>("decayVz", "decayVz", 100, 0, 1500);
-  h_decayVxyz = fs->make<TH2D>("decayVxyz", "Position of #chi^{0}#rightarrow#chi^{#pm}#pi^{#mp} decay;|z| [cm];|#rho| [cm]" , 100, 0, 1500, 100, 0, 1000);
-  h_decayVxyzWide = fs->make<TH2D>("decayVxyzWide",  "Position of #chi^{0}#rightarrow#chi^{#pm}#pi^{#mp} decay;|z| [cm];|#rho| [cm]" , 1000, 0, 3000, 1000, 0, 2000);
+  h_vxy = fs->make<TH1D>("neutralino_vxy", "neutralino vxy", 50, 0, 0.5);
+  h_vx = fs->make<TH1D>("neutralino_vx", "neutralino_vx", 50, 0, 0.5);
+  h_vy = fs->make<TH1D>("neutralino_vy", "neutralino_vy", 50, 0, 0.5);
+  h_vz = fs->make<TH1D>("neutralino_vz", "neutralino_vz", 50, 0, 0.5);
+  h_vxyz = fs->make<TH2D>("neutralino_vxyz", ";neutralino_vz;neutralino_vxy", 50, 0, 0.5, 50, 0, 0.5);
+  h_decayVxy = fs->make<TH1D>("chargino_Vxy", "chargino_Vxy", 100, 0, 1000);
+  h_decayVx = fs->make<TH1D>("chargino_Vx", "chargino_Vx", 100, 0, 1000);
+  h_decayVy = fs->make<TH1D>("chargino_Vy", "chargino_Vy", 100, 0, 1000);
+  h_decayVz = fs->make<TH1D>("chargino_Vz", "chargino_Vz", 100, 0, 1500);
+  h_decayVxyz = fs->make<TH2D>("chargino_Vxyz", "Position of #chi^{0}#rightarrow#chi^{#pm}#pi^{#mp} decay;|z| [cm];|#rho| [cm]" , 100, 0, 1500, 100, 0, 1000);
+  h_decayVxyzWide = fs->make<TH2D>("chargino_VxyzWide",  "Position of #chi^{0}#rightarrow#chi^{#pm}#pi^{#mp} decay;|z| [cm];|#rho| [cm]" , 1000, 0, 3000, 1000, 0, 2000);
   h_decayLength = fs->make<TH1D>("decayLength", "decayLength", 100, 0, 1000);
   h_ctauSmall = fs->make<TH1D>("ctauSmall", ";c#tau [cm]", 100, 0, 100);
   h_ctauMedium = fs->make<TH1D>("ctauMedium", ";c#tau [cm]", 100, 0, 1000);
@@ -166,14 +180,21 @@ AnalyzeDecays::AnalyzeDecays(const edm::ParameterSet& iConfig) {
   h_daughter1E  = fs->make<TH1D>("daughter1E", ";daughter 1 energy [GeV]", 100, 0, 500);
   h_EDiff       = fs->make<TH1D>("EDiff", ";(total daughters' energy) - (chargino energy) [GeV]", 100, -150, 150);
 
+  h_dPhi_decay = fs->make<TH1D>("dPhi_decay", ";#Delta#phi(#chi^{0}, #chi^{#pm})", 20, -0.005, 0.005);
+  h_dR_decay = fs->make<TH1D>("dR_decay", ";#Delta R(#chi^{0}, #chi^{#pm})", 10, 0, 0.01);
+  
+  // RECO quantities
+  h_reco_pt = fs->make<TH1D>("reco_pt", "RECO muon PT", 200, 0, 2000);
+  h_reco_eta = fs->make<TH1D>("reco_eta", "RECO muon eta", 100, -5, 5);
+  
 }
 
 
 AnalyzeDecays::~AnalyzeDecays()
 {
 
-   // do anything here that needs to be done at desctruction time
-   // (e.g. close files, deallocate resources etc.)
+  // do anything here that needs to be done at desctruction time
+  // (e.g. close files, deallocate resources etc.)
 
 }
 
@@ -188,291 +209,288 @@ AnalyzeDecays::~AnalyzeDecays()
 void
 AnalyzeDecays::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-   using namespace edm;
+  using namespace edm;
 
-   Handle<reco::GenParticleCollection > genParticles;
-   iEvent.getByLabel(genParticleTag_,genParticles);
-   //   iEvent.getByLabel("genParticles",genParticles);
+  Handle<reco::GenParticleCollection > genParticles;
+  iEvent.getByLabel(genParticleTag_,genParticles);
 
-   TLorentzVector pTot(0,0,0,0);
+  TLorentzVector pTot(0,0,0,0);
 
-   int nGenNeutralinoTot = 0;
-   int nNeutralinoNoDecay = 0;
-   int nGenNeutralinoSel = 0;
-   int nVtxNeutralinoToChargino = 0;
+  int nGenNeutralinoTot = 0;
+  int nNeutralinoNoDecay = 0;
+  int nGenNeutralinoSel = 0;
+  int nVtxNeutralinoToChargino = 0;
    
-   double vxy;
-   double vx;
-   double vy;
-   double vz;
-   double decayVxy;
-   double decayVx;
-   double decayVy;
-   double decayVz;
-   double decayLength;
-   double ctau;
+  double vxy;
+  double vx;
+  double vy;
+  double vz;
+  double decayVxy;
+  double decayVx;
+  double decayVy;
+  double decayVz;
+  double decayLength;
+  double ctau;
 
-   quiet_ || cout << "checking gen particles, size = " << genParticles->size() << endl;
+  quiet_ || cout << "checking gen particles, size = " << genParticles->size() << endl;
 
-   if (genParticles.isValid()) {
-     for( size_t k = 0; k < genParticles->size(); k++ ){
-       const reco::Candidate & mcParticle = (*genParticles)[k];
+  if (genParticles.isValid()) {
+    for( size_t k = 0; k < genParticles->size(); k++ ){
+      const reco::Candidate & neutralino = (*genParticles)[k];
 
-       int status = mcParticle.status();
-       int pdgId  = mcParticle.pdgId();
-       int numdgt = mcParticle.numberOfDaughters();
+      int status = neutralino.status();
+      int pdgId  = neutralino.pdgId();
+      int numdgt = neutralino.numberOfDaughters();
 
-       // since status 3 particles are always first in the list,
-       // we can break once we're through these
-       if(!isParticleGun_ && mcParticle.status() != 3) break;
+      // since status 3 particles are always first in the list,
+      // we can break once we're through these
+      if(!isParticleGun_ && neutralino.status() != 3) break;
+      if(abs(neutralino.pdgId()) != 1000022) continue; // only consider neutralino parents
+
+      nGenNeutralinoTot++;
+
+      h_GenEta->Fill(neutralino.eta());
+      if (fabs(neutralino.eta()) > MaxEta_) continue;
+
+      nGenNeutralinoSel++;
+      h_GenEtaSel->Fill(neutralino.eta());
+
+      quiet_ || cout << "Found gen neutralino with:  "
+		     << " pt = " << neutralino.pt()
+		     << ", eta = " << neutralino.eta()
+		     << ", status=" << status
+		     << "; pdgId=" << pdgId
+		     << "; numdgt=" << numdgt << endl;
        
-       if(abs(mcParticle.pdgId()) != 1000022) continue; // only consider neutralino parents
+      TLorentzVector p4(neutralino.px(),
+			neutralino.py(),
+			neutralino.pz(),
+			neutralino.energy());
+      pTot += p4;
 
-       nGenNeutralinoTot++;
+      h_neutralinoPt->Fill(p4.Pt());
 
-       h_GenEta->Fill(mcParticle.eta());
-       if (fabs(mcParticle.eta()) > MaxEta_) continue;
+      vx = neutralino.vx();
+      vy = neutralino.vy();
+      vz = neutralino.vz();
+      vxy = sqrt(vx*vx + vy*vy);
 
-       nGenNeutralinoSel++;
-       h_GenEtaSel->Fill(mcParticle.eta());
+      const reco::Candidate *mother   = &neutralino;
+      const reco::Candidate *daughter = &neutralino;
 
-       quiet_ || cout << "Found gen particle with:  "
-                      << " pt = " << mcParticle.pt()
-                      << ", eta = " << mcParticle.eta()
-                      << ", status=" << status
-                      << "; pdgId=" << pdgId
-                      << "; numdgt=" << numdgt << endl;
+      // Descend the decay chain until no daughters have the same PDG ID as neutralino.
+      while(true) {
+	bool foundDauSamePdgId = false;
+	for(uint i = 0; i < daughter->numberOfDaughters(); i++) {
+	  if(daughter->daughter(i)->pdgId() == neutralino.pdgId()) {
+	    foundDauSamePdgId = true;
+	    mother = daughter;
+	    daughter = daughter->daughter(i);
+	    break;
+	  }
+	}
+	if (!foundDauSamePdgId) break;
+      }
+
+      const reco::Candidate * pion = 0;
+      const reco::Candidate * chargino = 0;
+      
+      for(uint i = 0; i < daughter->numberOfDaughters(); i++) {
+	if(abs(daughter->daughter(i)->pdgId()) == 211 && !pion) pion = daughter->daughter(i);
+	if(abs(daughter->daughter(i)->pdgId()) == 1000024 && !chargino) chargino = daughter->daughter(i);
+      }
+
+      if(!pion || !chargino) continue;
+      
+      h_GenEtaFoundVtx->Fill(neutralino.eta());
+      nVtxNeutralinoToChargino++;
+
+      double daughter0Id = -99;
+      double daughter0E  = -99;
+      double daughter1Id = -99;
+      double daughter1E  = -99;
+      double daughterTotE  = 0;
+
+      decayVx = chargino->vx ();
+      decayVy = chargino->vy ();
+      decayVz = chargino->vz ();
+      decayVxy = sqrt(decayVx*decayVx + decayVy*decayVy);
+
+      TVector3 source(neutralino.vx (), neutralino.vy (), neutralino.vz ());
+      TVector3 sink(chargino->vx (), chargino->vy (), chargino->vz ());
+
+      quiet_ || cout << "Debug:  BNstop particle pdg id = " << neutralino.pdgId()
+		     << ", status = " << neutralino.status()
+		     << ", pt = " << neutralino.pt()
+		     << ", eta = " << neutralino.eta()
+		     << ", num charginos = " << neutralino.numberOfDaughters()
+		     << endl
+		     << "  production:  "
+		     << "  vx = " << neutralino.vx ()
+		     << "  vy = " << neutralino.vy ()
+		     << "  vz = " << neutralino.vz ()
+		     << endl
+		     << "  decay:  "
+		     << "  vx = " << chargino->vx ()
+		     << "  vy = " << chargino->vy ()
+		     << "  vz = " << chargino->vz ()
+		     << endl
+		     << "  chargino PDG ID:  " << chargino->pdgId()
+		     << ", status = " << chargino->status()
+		     << ", pt = " << chargino->pt()
+		     << ", eta = " << chargino->eta()
+		     << endl
+		     << "  mother PDG ID:  " << mother->pdgId()
+		     << ", status:  " << mother->status()
+		     << ", numdau:  " << mother->numberOfDaughters()
+		     << endl;
+	 
+      for (uint i=0; i<mother->numberOfDaughters(); i++) {
+	quiet_ || cout << "  Mother has daughter " << i << ": " << mother->daughter(i)->pdgId() << endl;
+      }
+
+      if (source == sink) {
+	// Set to non-physical values if no daughters are found
+	decayLength  = -99;
+	ctau         = -99;
+	//          betaAtDecay  = -99;
+	//          gammaAtDecay = -99;
+	decayVx  = -99;
+	decayVy  = -99;
+	decayVz  = -99;
+	decayVxy = -99;
+      }
+      else {
+	decayLength = (sink - source).Mag ();
+	ctau = (sink - source).Mag () / (neutralino.p4 ().Beta () * neutralino.p4 ().Gamma ());
+      }
+
+      h_vxy->Fill(fabs(vxy));
+      h_vx->Fill(fabs(vx));
+      h_vy->Fill(fabs(vy));
+      h_vz->Fill(fabs(vz));
+      h_vxyz->Fill(fabs(vz), fabs(vxy));
+      h_decayVxy->Fill(fabs(decayVxy));
+      h_decayVx->Fill(fabs(decayVx));
+      h_decayVy->Fill(fabs(decayVy));
+      h_decayVz->Fill(fabs(decayVz));
+      h_decayVxyz->Fill(fabs(decayVz), fabs(decayVxy));
+      h_decayVxyzWide->Fill(fabs(decayVz), fabs(decayVxy));
+      h_decayLength->Fill(decayLength);
+      h_ctauSmall->Fill(ctau);
+      h_ctauMedium->Fill(ctau);
+      h_ctauLarge->Fill(ctau);
+      (decayVxy < 17.5 && decayVz < 27.0) && h_ctauTruncatedSmall->Fill(ctau);
+      (decayVxy < 175.0 && decayVz < 270.0) && h_ctauTruncatedMedium->Fill(ctau);
+      h_ctauTruncatedLarge->Fill(ctau);
+      h_numdgt->Fill(numdgt);
+
+      if (decayLength == 0) {
+	quiet_ || cout << "Warning:  found particle " << pdgId
+		       << " with decayLength = " << decayLength
+		       << ", status = " << status
+		       << ", numdgt = " << numdgt
+		       << endl;
+	nNeutralinoNoDecay++;
+      }
+
+      if(neutralino.numberOfDaughters() >= 1){
+	daughter0Id = neutralino.daughter(0)->pdgId();
+	daughter0E  = neutralino.daughter(0)->energy();
+	daughterTotE += daughter0E;
+	quiet_ || cout << "Debug:  daughter0Id = " << neutralino.daughter(0)->pdgId()
+		       << ", status = " << neutralino.daughter(0)->status()
+		       << ", pt = " <<     neutralino.daughter(0)->pt()
+		       << ", eta = " <<    neutralino.daughter(0)->eta()
+		       << ", vx = " << neutralino.daughter(0)->vx()
+		       << ", vy = " << neutralino.daughter(0)->vy()
+		       << ", vz = " << neutralino.daughter(0)->vz()
+		       << endl;
+
+
+	if(neutralino.numberOfDaughters() >= 2){
+	  daughter1Id = neutralino.daughter(1)->pdgId();
+	  daughter1E  = neutralino.daughter(1)->energy();
+	  daughterTotE += daughter1E;
+
+	  quiet_ || cout << "Debug:  daughter1Id = " << neutralino.daughter(1)->pdgId()
+			 << ", status = " << neutralino.daughter(1)->status()
+			 << ", pt = " <<        neutralino.daughter(1)->pt()
+			 << ", eta = " <<       neutralino.daughter(1)->eta()
+			 << ", vx = " << neutralino.daughter(1)->vx()
+			 << ", vy = " << neutralino.daughter(1)->vy()
+			 << ", vz = " << neutralino.daughter(1)->vz()
+			 << endl;
+
+	}
+      }
+
+      h_daughter0Id->Fill(daughter0Id);
+      h_daughter0E ->Fill(daughter0E);
+      h_daughter1Id->Fill(fabs(daughter1Id));
+      h_daughter1E ->Fill(daughter1E);
+      if (decayLength!=0) {
+	h_EDiff      ->Fill(daughterTotE - neutralino.energy());
+      }
+
+      h_dPhi_decay->Fill(TVector2::Phi_mpi_pi(neutralino.phi() - chargino->phi()));
+      h_dR_decay->Fill(TMath::Sqrt((neutralino.eta() - chargino->eta())*(neutralino.eta() - chargino->eta()) +
+				   (neutralino.phi() - chargino->phi())*(neutralino.phi() - chargino->phi())));
        
-       TLorentzVector p4(mcParticle.px(),
-                         mcParticle.py(),
-                         mcParticle.pz(),
-                         mcParticle.energy());
-       pTot += p4;
+      quiet_ || cout << "Debug:  daughter0E = " << daughter0E
+		     << ", daughter1E = " << daughter1E
+		     << ", mother EE = " << neutralino.energy()
+		     << ", mother status = " << neutralino.status()
+		     << ", |daughter0Id| = 1e6 + " << fabs(daughter0Id) - 1e6
+		     << ", daughter0 status = " << neutralino.daughter(0)->status()
+		     << ", daughter1Id = " << daughter1Id
+		     << ", Ediff = " << daughterTotE - neutralino.energy()
+		     << endl;
+    }
 
-       h_neutralinoPt->Fill(p4.Pt());
+  }
 
-       vx = mcParticle.vx();
-       vy = mcParticle.vy();
-       vz = mcParticle.vz();
-       vxy = sqrt(vx*vx + vy*vy);
+  h_neutralinoSumPt->Fill(pTot.Pt());
+  h_nVtxNeutralinoToChargino->Fill(nVtxNeutralinoToChargino);
+  h_nGenNeutralinoTot->Fill(nGenNeutralinoTot);
+  h_nGenNeutralinoSel->Fill(nGenNeutralinoSel);
+  h_nNeutralinoNoDecay->Fill(nNeutralinoNoDecay);
+  h_missingVtx->Fill(nGenNeutralinoSel - nVtxNeutralinoToChargino);
+   
+  quiet_ || cout << "Found"
+		 << " nVtxCharginoToNeutralino = " << nVtxNeutralinoToChargino
+		 << ", missingVtx = " << nGenNeutralinoSel - nVtxNeutralinoToChargino
+		 << ", nGenCharginoTot = " << nGenNeutralinoTot
+		 << ", nGenCharginoSel = " << nGenNeutralinoSel
+		 << endl;
 
-       const reco::Candidate *mother   = &mcParticle;
-       const reco::Candidate *daughter = &mcParticle;
+  quiet_ || cout << "Debugging:  missingVtx = " << nGenNeutralinoSel - nVtxNeutralinoToChargino << endl;
 
-       // Descend the decay chain until no daughters have the same PDG ID as mcParticle.
-       while (true) {
-         bool foundDauSamePdgId = false;
-         for (uint i=0; i<daughter->numberOfDaughters(); i++) {
-           if (daughter->daughter(i)->pdgId() == mcParticle.pdgId()) {
-             foundDauSamePdgId = true;
-             mother = daughter;
-             daughter = daughter->daughter(i);
-             break;
-           }
-         }
-         if (!foundDauSamePdgId) break;
-       }
-       // Now daughter has no daughters with the same PDG ID as mcParticle.
-       // Next choose the daughter with the outermost production vertex, in case there are multiple vertices
-       // (e.g., an electron delta ray can produce a vertex before the decay vertex)
-       double radiusLastVtx = -99;
-       int idxDauLastVtx = -99;
-       for (uint i=0; i<daughter->numberOfDaughters(); i++) {
-         double testVx = daughter->daughter(i)->vx();
-         double testVy = daughter->daughter(i)->vy();
-         double testVz = daughter->daughter(i)->vz();
-         double radius = sqrt(testVx*testVx + testVy*testVy + testVz*testVz);
-         if (radius > radiusLastVtx) {
-           radiusLastVtx = radius;
-           idxDauLastVtx = i;
-         }
-       }
-       if (idxDauLastVtx>=0) {
-         mother = daughter;
-         daughter = daughter->daughter(idxDauLastVtx);
-       }
+  Handle<reco::TrackCollection > recoParticles;
+  iEvent.getByLabel(recoParticleTag_, recoParticles);
+   
+  if(recoParticles.isValid()) {
+    
+    for(size_t k = 0; k < recoParticles->size(); k++){
+      const reco::Track & recoTrack = (*recoParticles)[k];
 
-       // old:
-//        while (daughter->numberOfDaughters () &&          // Find the daughter that is
-//               (daughter->status () == 3 ||               // not status 3
-//                daughter->pdgId() == mcParticle.pdgId())  // and has different pdgId
-//               )  daughter = daughter->daughter (0);
+      TLorentzVector muon(recoTrack.px(), recoTrack.py(), recoTrack.pz(), recoTrack.p());
+       
+      h_reco_pt->Fill(muon.Pt());
+      h_reco_eta->Fill(muon.Eta());
 
+    }
 
-       if (daughter->pdgId() != 1000024 &&
-           abs(daughter->pdgId()) != 211) {
-         quiet_ || cout << "DebuggingWarning:  will skip event with daughter PDG ID = " << daughter->pdgId()
-                        << " and chargino ID = " << mcParticle.pdgId() << endl;
-         continue;
-       }
-
-       h_GenEtaFoundVtx->Fill(mcParticle.eta());
-       nVtxNeutralinoToChargino++;
-
-       double daughter0Id = -99;
-       double daughter0E  = -99;
-       double daughter1Id = -99;
-       double daughter1E  = -99;
-       double daughterTotE  = 0;
-
-       decayVx = daughter->vx ();
-       decayVy = daughter->vy ();
-       decayVz = daughter->vz ();
-       decayVxy = sqrt(decayVx*decayVx + decayVy*decayVy);
-
-       TVector3 source (mcParticle.vx (), mcParticle.vy (), mcParticle.vz ()),
-         sink (daughter->vx (), daughter->vy (), daughter->vz ());
-
-       quiet_ || cout << "Debug:  BNstop particle pdg id = " << mcParticle.pdgId()
-                      << ", status = " << mcParticle.status()
-                      << ", pt = " << mcParticle.pt()
-                      << ", eta = " << mcParticle.eta()
-                      << ", num daughters = " << mcParticle.numberOfDaughters()
-                      << endl
-                      << "  production:  "
-                      << "  vx = " << mcParticle.vx ()
-                      << "  vy = " << mcParticle.vy ()
-                      << "  vz = " << mcParticle.vz ()
-                      << endl
-                      << "  decay:  "
-                      << "  vx = " << daughter->vx ()
-                      << "  vy = " << daughter->vy ()
-                      << "  vz = " << daughter->vz ()
-                      << endl
-                      << "  daughter PDG ID:  " << daughter->pdgId()
-                      << ", status = " << daughter->status()
-                      << ", pt = " << daughter->pt()
-                      << ", eta = " << daughter->eta()
-                      << endl
-                      << "  mother PDG ID:  " << mother->pdgId()
-                      << ", status:  " << mother->status()
-                      << ", numdau:  " << mother->numberOfDaughters()
-                      << endl;
-       for (uint i=0; i<mother->numberOfDaughters(); i++) {
-          quiet_ || cout << "  Mother has daughter " << i << ": " << mother->daughter(i)->pdgId() << endl;
-       }
-
-       if (source==sink) {
-         // Set to non-physical values if no daughters are found
-         decayLength  = -99;
-         ctau         = -99;
-//          betaAtDecay  = -99;
-//          gammaAtDecay = -99;
-         decayVx  = -99;
-         decayVy  = -99;
-         decayVz  = -99;
-         decayVxy = -99;
-       } else {
-         decayLength = (sink - source).Mag ();
-         ctau = (sink - source).Mag () / (mcParticle.p4 ().Beta () * mcParticle.p4 ().Gamma ());
-       }
-
-       h_vxy->Fill(fabs(vxy));
-       h_vx->Fill(fabs(vx));
-       h_vy->Fill(fabs(vy));
-       h_vz->Fill(fabs(vz));
-       h_vxyz->Fill(fabs(vz), fabs(vxy));
-       h_decayVxy->Fill(fabs(decayVxy));
-       h_decayVx->Fill(fabs(decayVx));
-       h_decayVy->Fill(fabs(decayVy));
-       h_decayVz->Fill(fabs(decayVz));
-       h_decayVxyz->Fill(fabs(decayVz), fabs(decayVxy));
-       h_decayVxyzWide->Fill(fabs(decayVz), fabs(decayVxy));
-       h_decayLength->Fill(decayLength);
-       h_ctauSmall->Fill(ctau);
-       h_ctauMedium->Fill(ctau);
-       h_ctauLarge->Fill(ctau);
-       (decayVxy < 17.5 && decayVz < 27.0) && h_ctauTruncatedSmall->Fill(ctau);
-       (decayVxy < 175.0 && decayVz < 270.0) && h_ctauTruncatedMedium->Fill(ctau);
-       h_ctauTruncatedLarge->Fill(ctau);
-       h_numdgt->Fill(numdgt);
-
-       if (decayLength==0) {
-         quiet_ || cout << "Warning:  found particle " << pdgId
-                        << " with decayLength = " << decayLength
-                        << ", status = " << status
-                        << ", numdgt = " << numdgt
-                        << endl;
-         nNeutralinoNoDecay++;
-       }
-
-       if( (mcParticle.numberOfDaughters()>=1) ){
-         daughter0Id = mcParticle.daughter(0)->pdgId();
-         daughter0E  = mcParticle.daughter(0)->energy();
-         daughterTotE += daughter0E;
-         quiet_ || cout << "Debug:  daughter0Id = " << mcParticle.daughter(0)->pdgId()
-                        << ", status = " << mcParticle.daughter(0)->status()
-                        << ", pt = " <<     mcParticle.daughter(0)->pt()
-                        << ", eta = " <<    mcParticle.daughter(0)->eta()
-                        << ", vx = " << mcParticle.daughter(0)->vx()
-                        << ", vy = " << mcParticle.daughter(0)->vy()
-                        << ", vz = " << mcParticle.daughter(0)->vz()
-                        << endl;
-
-
-         if( (mcParticle.numberOfDaughters()>=2) ){
-           daughter1Id = mcParticle.daughter(1)->pdgId();
-           daughter1E  = mcParticle.daughter(1)->energy();
-           daughterTotE += daughter1E;
-
-           quiet_ || cout << "Debug:  daughter1Id = " << mcParticle.daughter(1)->pdgId()
-                          << ", status = " << mcParticle.daughter(1)->status()
-                          << ", pt = " <<        mcParticle.daughter(1)->pt()
-                          << ", eta = " <<       mcParticle.daughter(1)->eta()
-                          << ", vx = " << mcParticle.daughter(1)->vx()
-                          << ", vy = " << mcParticle.daughter(1)->vy()
-                          << ", vz = " << mcParticle.daughter(1)->vz()
-                          << endl;
-
-         }
-       }
-
-       h_daughter0Id->Fill(daughter0Id);
-       h_daughter0E ->Fill(daughter0E);
-       h_daughter1Id->Fill(fabs(daughter1Id));
-       h_daughter1E ->Fill(daughter1E);
-       if (decayLength!=0) {
-         h_EDiff      ->Fill(daughterTotE - mcParticle.energy());
-       }
-       quiet_ || cout << "Debug:  daughter0E = " << daughter0E
-                      << ", daughter1E = " << daughter1E
-                      << ", mother EE = " << mcParticle.energy()
-                      << ", mother status = " << mcParticle.status()
-                      << ", |daughter0Id| = 1e6 + " << fabs(daughter0Id) - 1e6
-                      << ", daughter0 status = " << mcParticle.daughter(0)->status()
-                      << ", daughter1Id = " << daughter1Id
-                      << ", Ediff = " << daughterTotE - mcParticle.energy()
-                      << endl;
-     }
-
-   }
-
-   h_neutralinoSumPt->Fill(pTot.Pt());
-   h_nVtxNeutralinoToChargino->Fill(nVtxNeutralinoToChargino);
-   h_nGenNeutralinoTot->Fill(nGenNeutralinoTot);
-   h_nGenNeutralinoSel->Fill(nGenNeutralinoSel);
-   h_nNeutralinoNoDecay->Fill(nNeutralinoNoDecay);
-   h_missingVtx->Fill(nGenNeutralinoSel - nVtxNeutralinoToChargino);
-
-   quiet_ || cout << "Found"
-                  << " nVtxCharginoToNeutralino = " << nVtxNeutralinoToChargino
-                  << ", missingVtx = " << nGenNeutralinoSel - nVtxNeutralinoToChargino
-                  << ", nGenCharginoTot = " << nGenNeutralinoTot
-                  << ", nGenCharginoSel = " << nGenNeutralinoSel
-                  << endl;
-
-   quiet_ || cout << "Debugging:  missingVtx = " << nGenNeutralinoSel - nVtxNeutralinoToChargino << endl;
-
-
+  }
 
 #ifdef THIS_IS_AN_EVENT_EXAMPLE
-   Handle<ExampleData> pIn;
-   iEvent.getByLabel("example",pIn);
+  Handle<ExampleData> pIn;
+  iEvent.getByLabel("example",pIn);
 #endif
 
 #ifdef THIS_IS_AN_EVENTSETUP_EXAMPLE
-   ESHandle<SetupData> pSetup;
-   iSetup.get<SetupRecord>().get(pSetup);
+  ESHandle<SetupData> pSetup;
+  iSetup.get<SetupRecord>().get(pSetup);
 #endif
 }
 

@@ -1,4 +1,4 @@
-#include "DisplacedSUSY/DisplacedTrackingStudies/plugins/DisplacedMuonProducer.h"
+#include "DisplacedMuonProducer.h"
 
 #if IS_VALID(muons)
 #include "OSUT3Analysis/AnaTools/interface/CommonUtils.h"
@@ -32,7 +32,7 @@ DisplacedMuonProducer::produce (edm::Event &event, const edm::EventSetup &setup)
 	  osu::Muon muon2 (object, particles, cfg_);
 	  if(durp
 
-	  
+
 	  if(muon1.isGlobalMuon() && muon2.isGlobalMuon() && PassCosmicSelection(muon1,muon2) && muon1.phi() != muon2.phi() && muon1.pt() > 30)
 	    {
 	      pl_->push_back (muon1);

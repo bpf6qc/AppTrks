@@ -10,12 +10,12 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(
-
+                                'file:step3_250gev_300cm.root',
                                 )
     )
 
 process.TFileService = cms.Service('TFileService',
-                                   fileName = cms.string('ZPeak.root')
+                                   fileName = cms.string('output_zpeak.root')
     )
 
 process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
@@ -24,10 +24,9 @@ process.maxEvents = cms.untracked.PSet (
     input = cms.untracked.int32 (-1)
     )
 
-process.ZPeakPlotter = cms.EDAnalyzer('ZPeakPlotter',
-                                      triggerResultsLabel = cms.InputTag("TriggerResults", "", "HLT"),
-                                      recoTrack = cms.InputTag('displacedGlobalMuons', '', 'RECO'),
-                                      recoTrack2 = cms.InputTag('displacedGlobalMuons', '', 'RECO'),
-                                      #globalMuons, displacedStandAloneMuons
+process.ZPeakAnalyzer = cms.EDAnalyzer('ZPeakAnalyzer',
+                                        triggerResultsLabel = cms.InputTag("TriggerResults", "", "HLT"),
+                                        trackCollectionLabel = cms.InputTag("displacedGlobalMuons", "", "RECO"),
+                                        genCollectionLabel = cms.InputTag("genParticlePlusGeant", "")
     )
-process.myPath = cms.Path (process.ZPeakPlotter)
+process.myPath = cms.Path (process.ZPeakAnalyzer)
